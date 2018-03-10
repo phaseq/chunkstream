@@ -1,7 +1,7 @@
 # chunkstream
 A high-performance in-memory C++ streaming buffer
 
-For larger memory streams the reallocation costs of a `std::vector` may be prohibitive. The allocation scheme of this class is similar to that of a `std::deque`, but with customizable chunk size. This allows the selection of larger 
+For larger memory streams the reallocation costs of a `std::vector` may be prohibitive. The allocation scheme of this class is similar to that of a `std::deque`, but with customizable chunk size. This allows the selection of larger chunk sizes than the default 16 bytes.
 
 ## Benchmark
 The benchmarks were performed on an IvyBridge processor, on newer platforms the numbers may differ. The number behind the test name indicates the number of 64 bit values that were serialized and deserialized.
