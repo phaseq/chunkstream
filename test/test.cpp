@@ -23,6 +23,19 @@ TEST(chunkstream, different_types) {
 	ASSERT_EQ(in4, out4);
 }
 
+TEST(chunkstream, readme_sample) {
+	fb::chunkstream<1024> ss;
+	ss << "temperature: " << 23.2f << 'C';
+	char temperature[14];
+	float value;
+	char unit;
+	ss >> temperature >> value >> unit;
+
+	ASSERT_EQ(0, strcmp(temperature, "temperature: "));
+	ASSERT_EQ(23.2f, value);
+	ASSERT_EQ('C', unit);
+}
+
 TEST(chunkstream, access_multiple_chunks) {
 	fb::chunkstream<5> ss;
 	ss << int32_t(0) << int(1);
