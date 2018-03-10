@@ -59,7 +59,7 @@ public:
 
 	template <typename T>
 	chunkstream& operator>>(T& val) {
-		if (m_readPos + sizeof(val) <= ((m_curChunk == m_curChunkR) ? m_writePos : CHUNK_SIZE)) {
+		if (m_readPos + sizeof(val) <= CHUNK_SIZE) {
 			// This should be the usual case: the value can be read entirely from the  current
 			// chunk. By specifying a compile-time constant copy size the compiler can optimize this
 			// better.
@@ -68,11 +68,10 @@ public:
 		} else {
 			// We will have to read the value from multiple chunks.
 			char* dst = reinterpret_cast<char*>(&val);
-			char* end = dst + sizeof(val);
-			size_t readBufferEnd = (m_curChunk == m_curChunkR) ? m_writePos : CHUNK_SIZE;
-			size_t read = std::min(sizeof(val), readBufferEnd - m_readPos);
-			memcpy(dst, m_curChunkR->data.get() + m_readPos, read);
-			dst += read;
+			const char* end = dst + sizeof(val);
+			const size_t sz = CHUNK_SIZE - m_readPos;
+			memcpy(dst, m_curChunkR->data.get() + m_readPos, sz);
+			dst += sz;
 			do {
 				if (!m_curChunkR->next) {
 					if (ENABLE_EXCEPTIONS)
@@ -81,13 +80,14 @@ public:
 						return *this;
 				}
 				m_curChunkR = m_curChunkR->next.get();
-				readBufferEnd = (m_curChunk == m_curChunkR) ? m_writePos : CHUNK_SIZE;
-				read = std::min(size_t(end - dst), readBufferEnd);
-				memcpy(dst, m_curChunkR->data.get(), read);
-				dst += read;
-				m_readPos = read;
+				const size_t sz = std::min(size_t(end - dst), CHUNK_SIZE);
+				memcpy(dst, m_curChunkR->data.get(), sz);
+				dst += sz;
+				m_readPos = sz;
 			} while (dst != end && m_curChunkR->next);
 		}
+		if (ENABLE_EXCEPTIONS && m_curChunk == m_curChunkR && m_readPos > m_writePos)
+			throw std::runtime_error("out of bounds read!");
 		return *this;
 	}
 
